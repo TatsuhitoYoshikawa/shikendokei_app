@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>試験時計</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<h1><div id="title">東大試験時計</div></h1>
+<div class="ad_button">
+  <button id="analogue_button">アナログ</button>
+  <button id="digital_button">デジタル</button>
+
+  <button id="reset_button" onclick="location.href='/'">リセット</button>
+</div>
+
+<br><br>
+
+{% if input_from_python %}
+<div id="selected_kamoku">{{input_from_python[0]}}</div>
+{% endif %}
+
+<div>
+  <button id="start_button">試験開始</button>
+</div>
+  
+
+<div id="show_digi_clock"></div>
+    
+<div id="show_ana_clock" class="wrapper">
+  <div class="clock">
+    <div class="scale"></div>
+    <div class="hour line"></div>
+    <div class="min line"></div>
+    <div class="sec line"></div>
+    <span class="c-clock__12">12</span>
+    <span class="c-clock__3">3</span>
+    <span class="c-clock__6">6</span>
+    <span class="c-clock__9">9</span>
+  </div>
+
+  {% if time1 and time2 %}
+  <div class="input_time">
+    <div id="input_time1">{{time1}}:00</div>
+    <div id="last_time1"></div>
+
+    <dvi id="input_time2">{{time2}}</div>
+    <div id="last_time2"></div>
+
+  </div>
+  {% endif %}
+</div>
+
+
+
+
+
+
+<script type="text/javascript">
+    let list_data = {{ input_from_python | tojson }};
+</script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/tokei_setting.js') }}"></script>
+
+
+</body>
+</html>
+  
+
+
+
+
+
+
+  

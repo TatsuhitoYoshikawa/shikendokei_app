@@ -1,0 +1,188 @@
+@charset "utf-8";
+
+/****************** ボタンでデジタルとアナログを切り替え *********************/
+#show_digi_clock, #show_ana_clock {
+  display: none;
+  }
+  
+#digital_button.active, #analogue_button.active{
+  color: blue;
+  background-color: orange;
+  }
+  
+#show_ana_clock.active {
+  display: flex;
+  }
+
+#show_digi_clock.active {
+  display: block;
+  margin: 0 auto; /* ブロック要素を中央揃え */
+  text-align: center; /* ブロック内のテキストを中央揃え */
+}
+
+
+/**************** デジタル時計部分 *******************/
+#show_digi_clock{
+  font-size: 100px;
+}
+
+/**************** アナログ時計部分 ******************/
+
+/* 時計を設置する場所全体をwrapperで指定 */
+.wrapper {
+  width: 100%;
+  padding: 40px;
+  box-sizing: border-box;
+  float: left;
+}
+
+.clock {
+    background-color: rgba(255, 243, 217, 0.2);
+    border: 3px solid black;
+    width: 400px;
+    height: 400px;
+    position: relative;
+    border-radius: 50%; /* 概形をどれだけ丸めるか。50%で真円になる */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* clockクラスに追加で装飾：時計の中心の丸の部分 */
+.clock::after {
+    width: 16px;
+    height: 16px;
+    background: black;
+    content: "";
+
+    position: absolute;
+    top: calc(50% - 8px); /* 親要素であるclockクラスがパーセントの基準 */ /* widthとheightを16pxにしているので、位置を決めるときはその半分だけずらす必要あり */
+    left: calc(50% - 8px);
+    border-radius: 50%;
+}
+
+.line {
+    position: absolute; /* 絶対配置なので、.hourなどで指定したtop・leftに完全に準じる */
+    transform-origin: bottom; /* 回転させるときの基準点を線の底（今回なら時計の中心）に設定 */
+}
+
+.hour {
+    width: 8px; /* 領域のサイズ・背景色を指定することで”線分”を作っているイメージ */
+    height: 140px;
+    background: black;
+    top: calc(50% - 140px); /* 親要素はclockクラス */ /* topの位置を基準にheightだけ下に伸びる */
+    left: calc(50% - 4px); /* leftで左から見た時の基準を設定 */
+}
+
+.min {
+    width: 4px;
+    height: 180px;
+    background: black;
+    top: calc(50% - 180px);
+    left: calc(50% - 2px);
+}
+
+.sec {
+    width: 1px;
+    height: 180px;
+    background: red;
+    top: calc(50% - 180px);
+    left: calc(50% - 0.5px);
+}
+
+/* 時計の文字盤 */
+.c-clock__12 {
+  position: absolute;
+  top: 15px;
+  left: calc(50%);
+  transform: translateX(-50%);
+  font-size: 25px;
+}
+
+.c-clock__3 {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  font-size: 25px;
+}
+
+.c-clock__6 {
+  position: absolute;
+  bottom: 15px;
+  left: calc(50%);
+  transform: translateX(-50%);
+  font-size: 25px;
+}
+
+.c-clock__9 {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  font-size: 25px;
+}
+
+
+.scale {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* 後に目盛り線となる領域のスタイルを指定 */
+.scale > div { /* scaleクラス直下にあるdiv（app.jsで追加されるもの）にのみスタイル適用（>でなく半角スペースならscale以下の全てのdivにスタイル適用） */
+    position: absolute;
+    top: 0;
+    left: calc(50% - 2px); /* このtopとleftで時計の12時の場所が基準になっている */
+    width: 4px;
+    height: 50%; /* divの親であるscale（これは親であるclockを100%継いでいるので実質clock）の高さの50%を指定することで、下のtransform-origin:bottomと合わせて時計の中心が基準になる */
+    transform-origin: bottom;
+}
+
+/* 目盛り線のスタイルを指定 
+上の.scale > divで時計の中心から外円までの放射状の線を作った
+ここにafterをつけると、放射状の線の先だけを指定することになり、これが時計の目盛りとなる
+javascript側で、5分、10分、15分、・・・の時とそれ以外で別のclassを与えているので、
+それぞれにcssを適用することで、5分、10分、15分、・・・の時だけ目盛りを太く長くする
+*/
+.scale > .sc_class1::after {
+    position: absolute;
+    top: 0;
+    content: "";
+    width: 4px;
+    height: 12px;
+    background-color: black;
+}
+
+.scale > .sc_class2::after {
+  position: absolute;
+  top: 0;
+  content: "";
+  width: 2px;
+  height: 6px;
+  background-color: black;
+}
+
+.input_time {
+  float:right
+}
+
+
+
+
+/****************** ボタン配置 ***********************/
+.setbutton {
+  display: block;
+}
+
+.ad_button {
+  display: inline;
+}
+
+#reset_button {
+  width: 100px;
+  font-size: 20px;
+  box-sizing: border-box;
+  position: relative;
+  left: 50px;
+}
