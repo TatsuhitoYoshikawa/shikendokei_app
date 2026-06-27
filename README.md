@@ -4,6 +4,14 @@
 
 > 旧バージョンは Flask + JavaScript 実装でしたが、Flutter（全プラットフォーム対応）に置き換えました。
 
+## 画面
+
+<p align="center">
+  <img src="docs/screenshots/main.png" width="240" alt="メイン画面（ライト）">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/main_dark.png" width="240" alt="メイン画面（ダーク）">
+</p>
+
 デザインシステムのトークンに沿ったビジュアルで、**ライト / ダークテーマ**に対応します。
 
 ## 機能
