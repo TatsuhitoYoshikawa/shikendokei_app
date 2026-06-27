@@ -1,0 +1,6 @@
+include: package:flutter_lints/flutter.yaml
+
+# 追加のカスタムルールは必要に応じてここに記載する。
+# linter:
+#   rules:
+#     - prefer_single_quotes
