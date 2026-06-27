@@ -1,11 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:shikendokei/main.dart';
 
 void main() {
+  setUp(() {
+    // プリセット読み込み（shared_preferences）をテスト用にモックする。
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('開始/停止ボタンと切替が表示される', (WidgetTester tester) async {
     await tester.pumpWidget(const ShikenDokeiApp());
+    await tester.pump(); // プリセットの非同期読み込みを反映。
 
     // タイトルと主要なボタンが表示されている。
     expect(find.text('試験時計'), findsOneWidget);

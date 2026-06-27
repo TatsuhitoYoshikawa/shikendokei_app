@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
+import 'models/exam_preset.dart';
+import 'preset_store.dart';
 import 'widgets/analog_clock.dart';
 import 'widgets/digital_clock.dart';
+import 'widgets/preset_manager_sheet.dart';
 import 'widgets/time_setting_dialog.dart';
 
 /// 試験時計のメイン画面（1画面構成）。
@@ -37,6 +40,20 @@ class _ClockScreenState extends State<ClockScreen> {
 
   Timer? _timer;
   final AudioPlayer _player = AudioPlayer();
+
+  /// 端末ローカルに保存された開始/終了時刻のプリセット一覧。
+  List<ExamPreset> _presets = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPresets();
+  }
+
+  Future<void> _loadPresets() async {
+    final presets = await PresetStore.load();
+    if (mounted) setState(() => _presets = presets);
+  }
 
   @override
   void dispose() {
@@ -113,6 +130,31 @@ class _ClockScreenState extends State<ClockScreen> {
     }
   }
 
+  // ---- プリセット ---------------------------------------------------------
+
+  Future<void> _openPresets() async {
+    _stop(); // 設定操作と同様、時の刻みは止める。
+    final selected = await PresetManagerSheet.show(
+      context,
+      presets: _presets,
+      onChanged: (updated) {
+        setState(() => _presets = updated);
+        PresetStore.save(updated);
+      },
+    );
+    if (selected != null) {
+      _applyPreset(selected);
+    }
+  }
+
+  void _applyPreset(ExamPreset preset) {
+    setState(() {
+      _startTime = preset.start;
+      _endTime = preset.end;
+      _current = preset.start; // 開始時刻にセット。
+    });
+  }
+
   // ---- UI -----------------------------------------------------------------
 
   String _fmt(Duration d) {
@@ -185,6 +227,17 @@ class _ClockScreenState extends State<ClockScreen> {
               ),
             ),
             const SizedBox(height: 24),
+
+            // プリセット選択
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _openPresets,
+                icon: const Icon(Icons.list_alt),
+                label: const Text('プリセットから選択 / 管理'),
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // 時刻設定
             Row(
