@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 /// 表示時刻を `HH:MM:SS` の大きな等幅表示で描画するデジタル時計。
 class DigitalClock extends StatelessWidget {
   const DigitalClock({super.key, required this.time});
@@ -11,6 +13,7 @@ class DigitalClock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final totalSeconds = time.inSeconds;
     final hour = (totalSeconds ~/ 3600) % 24;
     final min = (totalSeconds ~/ 60) % 60;
@@ -21,10 +24,11 @@ class DigitalClock extends StatelessWidget {
       fit: BoxFit.scaleDown,
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
+          color: colors.textPrimary,
           fontSize: 96,
           fontWeight: FontWeight.bold,
-          fontFeatures: [FontFeature.tabularFigures()],
+          fontFeatures: const [FontFeature.tabularFigures()],
           letterSpacing: 2,
         ),
       ),

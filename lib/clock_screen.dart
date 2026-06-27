@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import 'models/exam_preset.dart';
 import 'preset_store.dart';
+import 'theme/app_colors.dart';
+import 'theme/theme_controller.dart';
 import 'widgets/analog_clock.dart';
 import 'widgets/digital_clock.dart';
 import 'widgets/preset_manager_sheet.dart';
@@ -15,7 +17,10 @@ import 'widgets/time_setting_dialog.dart';
 /// 設定した開始時刻を起点に、開始ボタンで1秒ずつ時を刻む。終了時刻に達すると
 /// 音を鳴らし「試験終了」オーバーレイを表示する（画面遷移はしない）。
 class ClockScreen extends StatefulWidget {
-  const ClockScreen({super.key});
+  const ClockScreen({super.key, required this.themeController});
+
+  /// ライト/ダーク切替を司るコントローラ（AppBar のアイコンから操作）。
+  final ThemeController themeController;
 
   @override
   State<ClockScreen> createState() => _ClockScreenState();
@@ -144,6 +149,7 @@ class _ClockScreenState extends State<ClockScreen> {
     final selected = await PresetManagerSheet.show(
       context,
       presets: _presets,
+      selectedName: _presetName,
       onChanged: (updated) {
         setState(() => _presets = updated);
         PresetStore.save(updated);
@@ -165,7 +171,7 @@ class _ClockScreenState extends State<ClockScreen> {
 
   // ---- UI -----------------------------------------------------------------
 
-  String _fmt(Duration d) {
+  String _hms(Duration d) {
     final h = (d.inSeconds ~/ 3600) % 24;
     final m = (d.inSeconds ~/ 60) % 60;
     final s = d.inSeconds % 60;
@@ -173,184 +179,361 @@ class _ClockScreenState extends State<ClockScreen> {
     return '${two(h)}:${two(m)}:${two(s)}';
   }
 
+  String _hm(Duration d) {
+    final h = (d.inSeconds ~/ 3600) % 24;
+    final m = (d.inSeconds ~/ 60) % 60;
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(h)}:${two(m)}';
+  }
+
+  /// 開始時刻からの経過時間（負にはしない）。
+  Duration get _elapsed {
+    final e = _current - _startTime;
+    return e.isNegative ? Duration.zero : e;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         title: const Text('試験時計'),
-        centerTitle: true,
+        actions: [
+          IconButton(
+            iconSize: 24,
+            tooltip: isDark ? 'ライトテーマに切替' : 'ダークテーマに切替',
+            onPressed: () => widget.themeController.toggle(context),
+            icon: Icon(
+              isDark ? Icons.dark_mode : Icons.light_mode,
+              color: colors.themeIcon,
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: Stack(
         children: [
-          _buildMain(context),
-          if (_examFinished) _buildFinishOverlay(context),
+          _buildMain(context, colors),
+          if (_examFinished) _buildFinishOverlay(context, colors),
         ],
       ),
     );
   }
 
-  Widget _buildMain(BuildContext context) {
+  Widget _buildMain(BuildContext context, AppColors colors) {
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // アナログ/デジタル切替
-            SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(value: true, label: Text('アナログ')),
-                ButtonSegment(value: false, label: Text('デジタル')),
-              ],
-              selected: {_isAnalog},
-              onSelectionChanged: (s) =>
-                  setState(() => _isAnalog = s.first),
-            ),
-            const SizedBox(height: 24),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 6, 18, 22),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 8),
+                      _segmentedControl(colors),
+                      const SizedBox(height: 20),
+                      _presetNameRow(colors),
+                      const SizedBox(height: 14),
 
-            // 選択中のプリセット名（時計の上部）
-            if (_presetName != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  _presetName!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                      // アナログ / デジタル時計。画面幅いっぱいに拡大（最大 360）。
+                      SizedBox.square(
+                        dimension: (constraints.maxWidth - 12)
+                            .clamp(222.0, 360.0),
+                        child: Center(
+                          child: _isAnalog
+                              ? AnalogClock(time: _current)
+                              : DigitalClock(time: _current),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // 経過時間キャプション。
+                      Text(
+                        '経過 ${_hms(_elapsed)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: colors.textMuted,
+                          letterSpacing: 0.08 * 13,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+
+                      const Expanded(child: SizedBox(height: 16)),
+
+                      _startStopButton(colors),
+                      const SizedBox(height: 14),
+                      _timeCardsRow(colors),
+                    ],
                   ),
                 ),
               ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
-            // 時計表示
-            SizedBox(
-              height: 320,
-              child: Center(
-                child: _isAnalog
-                    ? AnalogClock(time: _current)
-                    : DigitalClock(time: _current),
+  Widget _segmentedControl(AppColors colors) {
+    return Container(
+      width: 204,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: colors.segTrack,
+        border: Border.all(color: colors.segBorder),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          _segment(colors, label: 'アナログ', selected: _isAnalog,
+              onTap: () => setState(() => _isAnalog = true)),
+          _segment(colors, label: 'デジタル', selected: !_isAnalog,
+              onTap: () => setState(() => _isAnalog = false)),
+        ],
+      ),
+    );
+  }
+
+  Widget _segment(
+    AppColors colors, {
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 7),
+          decoration: BoxDecoration(
+            color: selected ? colors.segSelected : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            boxShadow: selected ? colors.segShadow : null,
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: selected ? colors.segSelectedText : colors.segOther,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _presetNameRow(AppColors colors) {
+    final hasPreset = _presetName != null;
+    return InkWell(
+      onTap: _openPresets,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                hasPreset ? _presetName! : 'プリセットを選択',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: hasPreset ? colors.textSub : colors.textMuted,
+                  letterSpacing: 0.04 * 13,
+                ),
               ),
             ),
-            const SizedBox(height: 24),
-
-            // 開始/停止ボタン
-            SizedBox(
-              width: 220,
-              height: 56,
-              child: FilledButton.icon(
-                onPressed: _isRunning ? _stop : _start,
-                icon: Icon(_isRunning ? Icons.stop : Icons.play_arrow),
-                label: Text(
-                  _isRunning ? '停止' : '開始',
-                  style: const TextStyle(fontSize: 20),
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _isRunning ? Colors.red : null,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // プリセット選択
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _openPresets,
-                icon: const Icon(Icons.list_alt),
-                label: const Text('プリセットから選択 / 管理'),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 時刻設定
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _timeSettingCard(
-                  label: '開始時刻',
-                  value: _fmt(_startTime),
-                  onTap: _editStartTime,
-                ),
-                _timeSettingCard(
-                  label: '終了時刻',
-                  value: _fmt(_endTime),
-                  onTap: _editEndTime,
-                ),
-              ],
-            ),
+            const SizedBox(width: 2),
+            Icon(Icons.expand_more, size: 16, color: colors.textMuted),
           ],
         ),
       ),
     );
   }
 
-  Widget _timeSettingCard({
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Text(label, style: const TextStyle(fontSize: 14)),
-                const SizedBox(height: 8),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Icon(Icons.edit, size: 18),
-              ],
-            ),
+  Widget _startStopButton(AppColors colors) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: FilledButton.icon(
+        onPressed: _isRunning ? _stop : _start,
+        icon: Icon(_isRunning ? Icons.stop : Icons.play_arrow, size: 22),
+        label: Text(
+          _isRunning ? '停止' : '開始',
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+        ),
+        style: FilledButton.styleFrom(
+          backgroundColor: _isRunning ? colors.danger : colors.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFinishOverlay(BuildContext context) {
-    return Positioned.fill(
-      child: ColoredBox(
-        color: Colors.black87,
-        child: Center(
+  Widget _timeCardsRow(AppColors colors) {
+    return Row(
+      children: [
+        _timeCard(
+          colors,
+          label: '開始時刻',
+          value: _hm(_startTime),
+          onTap: _editStartTime,
+        ),
+        const SizedBox(width: 12),
+        _timeCard(
+          colors,
+          label: '終了時刻',
+          value: _hm(_endTime),
+          onTap: _editEndTime,
+        ),
+      ],
+    );
+  }
+
+  Widget _timeCard(
+    AppColors colors, {
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            border: Border.all(color: colors.surfaceBorder),
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '試験終了',
+              Text(
+                label,
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 64,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textSub,
+                  letterSpacing: 0.04 * 11,
                 ),
               ),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: _dismissOverlay,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
-                ),
-                child: const Text(
-                  '元の画面に戻る',
-                  style: TextStyle(fontSize: 20),
-                ),
+                  Icon(Icons.edit, size: 16, color: colors.textMuted),
+                ],
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFinishOverlay(BuildContext context, AppColors colors) {
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          // 背景にうっすらと時計。
+          Positioned.fill(
+            child: Center(
+              child: Opacity(
+                opacity: 0.16,
+                child: SizedBox(
+                  width: 200,
+                  height: 200,
+                  child: AnalogClock(time: _current),
+                ),
+              ),
+            ),
+          ),
+          // 全面オーバーレイ。
+          Positioned.fill(
+            child: ColoredBox(
+              color: colors.finishBg,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'EXAM FINISHED',
+                      style: TextStyle(
+                        color: colors.finishLabel,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.34 * 12,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '試験終了',
+                      style: TextStyle(
+                        color: colors.finishTitle,
+                        fontSize: 42,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.06 * 42,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'おつかれさまでした',
+                      style: TextStyle(
+                        color: colors.finishSub,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      height: 48,
+                      child: FilledButton(
+                        onPressed: _dismissOverlay,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: colors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 30),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          '元の画面に戻る',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

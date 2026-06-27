@@ -16,8 +16,26 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.1
 
 flutter:
   uses-material-design: true
   assets:
     - assets/sounds/
+
+# アプリアイコン生成設定（dart run flutter_launcher_icons で適用）。
+# デザイナー作成のアイコン（export/）を、マスター(iOS/汎用) と
+# Android アダプティブ2レイヤー（前景＋背景）に使用する。
+flutter_launcher_icons:
+  ios: true
+  android: true
+  remove_alpha_ios: true
+  image_path: "export/appicon_1024.png"
+  adaptive_icon_background: "export/appicon_android_background_432.png"
+  adaptive_icon_foreground: "export/appicon_android_foreground_432.png"
+  web:
+    generate: true
+    background_color: "#FCFCFD"
+    theme_color: "#009BFA"
+  macos:
+    generate: true

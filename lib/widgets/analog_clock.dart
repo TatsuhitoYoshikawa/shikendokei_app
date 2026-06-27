@@ -2,12 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 /// 表示時刻（時/分/秒）を受け取り、文字盤・目盛り・3本の針を描画するアナログ時計。
 ///
-/// 針の角度は既存 JS (`tokei.js` の GetTimeAnalogue/SetTimeAnalogue) の計算を踏襲:
-///   時針 = 時 * 30 + 分 * 0.5 度
-///   分針 = 分 * 6 度
-///   秒針 = 秒 * 6 度
+/// デザイン（DS ハンドオフの `WallClock`）に準拠。viewBox 210×210・中心 (105,105)・
+/// 半径 84 を基準に、与えられたサイズへスケールして描画する。
+/// 針の角度計算は既存どおり:
+///   時針 = 時 * 30 + 分 * 0.5 度 / 分針 = 分 * 6 度 / 秒針 = 秒 * 6 度
 class AnalogClock extends StatelessWidget {
   const AnalogClock({super.key, required this.time});
 
@@ -16,101 +18,117 @@ class AnalogClock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return AspectRatio(
       aspectRatio: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: CustomPaint(
-          painter: _ClockPainter(time),
-          child: const SizedBox.expand(),
-        ),
+      child: CustomPaint(
+        painter: _ClockPainter(time: time, colors: colors),
+        child: const SizedBox.expand(),
       ),
     );
   }
 }
 
 class _ClockPainter extends CustomPainter {
-  _ClockPainter(this.time);
+  _ClockPainter({required this.time, required this.colors});
 
   final Duration time;
+  final AppColors colors;
+
+  // デザインの viewBox（210×210）基準値。
+  static const double _vb = 210;
+  static const double _vbCenter = 105;
+  static const double _vbRadius = 84;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) / 2;
+    // viewBox 基準で描画し、実サイズへ等倍スケールする。
+    final scale = math.min(size.width, size.height) / _vb;
+    canvas.save();
+    canvas.translate(
+      (size.width - _vb * scale) / 2,
+      (size.height - _vb * scale) / 2,
+    );
+    canvas.scale(scale);
 
-    _drawFace(canvas, center, radius);
-    _drawTicks(canvas, center, radius);
-    _drawNumbers(canvas, center, radius);
-    _drawHands(canvas, center, radius);
+    const center = Offset(_vbCenter, _vbCenter);
+    const r = _vbRadius;
 
-    // 中心の丸
-    canvas.drawCircle(center, radius * 0.03, Paint()..color = Colors.black);
+    _drawFace(canvas, center, r);
+    _drawTicks(canvas, center, r);
+    _drawNumbers(canvas, center, r);
+    _drawHands(canvas, center);
+
+    canvas.restore();
   }
 
-  void _drawFace(Canvas canvas, Offset center, double radius) {
-    final fill = Paint()
-      ..color = const Color(0x33FFF3D9) // rgba(255,243,217,0.2) 相当
-      ..style = PaintingStyle.fill;
-    final border = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = radius * 0.015;
-    canvas.drawCircle(center, radius, fill);
-    canvas.drawCircle(center, radius, border);
+  void _drawFace(Canvas canvas, Offset center, double r) {
+    canvas.drawCircle(
+      center,
+      r,
+      Paint()
+        ..color = colors.clockFace
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawCircle(
+      center,
+      r,
+      Paint()
+        ..color = colors.clockFaceBorder
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5,
+    );
   }
 
-  /// 60本の目盛り。5分ごと（i % 5 == 0）は太く長く。
-  void _drawTicks(Canvas canvas, Offset center, double radius) {
+  /// 60本の目盛り。5分ごと（major）は太く長く・不透明、minor は細く短く半透明。
+  void _drawTicks(Canvas canvas, Offset center, double r) {
     for (var i = 0; i < 60; i++) {
       final isMajor = i % 5 == 0;
+      final len = isMajor ? 13.0 : 6.0;
       final paint = Paint()
-        ..color = Colors.black
-        ..strokeWidth = isMajor ? radius * 0.02 : radius * 0.01;
-      final tickLength = isMajor ? radius * 0.08 : radius * 0.04;
+        ..color = colors.clockTick.withValues(alpha: isMajor ? 1.0 : 0.45)
+        ..strokeWidth = isMajor ? 2.8 : 1.0
+        ..strokeCap = StrokeCap.round;
       final angle = i * 6 * math.pi / 180;
       final outer = Offset(
-        center.dx + radius * math.sin(angle),
-        center.dy - radius * math.cos(angle),
+        center.dx + r * math.sin(angle),
+        center.dy - r * math.cos(angle),
       );
       final inner = Offset(
-        center.dx + (radius - tickLength) * math.sin(angle),
-        center.dy - (radius - tickLength) * math.cos(angle),
+        center.dx + (r - len) * math.sin(angle),
+        center.dy - (r - len) * math.cos(angle),
       );
       canvas.drawLine(inner, outer, paint);
     }
   }
 
-  /// 12 / 3 / 6 / 9 の数字。
-  void _drawNumbers(Canvas canvas, Offset center, double radius) {
+  /// 12 / 3 / 6 / 9 の数字（半径 R-24 の位置）。
+  void _drawNumbers(Canvas canvas, Offset center, double r) {
     const numbers = {0: '12', 3: '3', 6: '6', 9: '9'};
-    final fontSize = radius * 0.13;
     numbers.forEach((hour, label) {
       final angle = hour * 30 * math.pi / 180;
       final position = Offset(
-        center.dx + (radius - radius * 0.2) * math.sin(angle),
-        center.dy - (radius - radius * 0.2) * math.cos(angle),
+        center.dx + (r - 24) * math.sin(angle),
+        center.dy - (r - 24) * math.cos(angle),
       );
       final tp = TextPainter(
         text: TextSpan(
           text: label,
           style: TextStyle(
-            color: Colors.black,
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
+            color: colors.clockNumber,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
         textAlign: TextAlign.center,
         textDirection: TextDirection.ltr,
       )..layout();
-      tp.paint(
-        canvas,
-        position - Offset(tp.width / 2, tp.height / 2),
-      );
+      tp.paint(canvas, position - Offset(tp.width / 2, tp.height / 2));
     });
   }
 
-  void _drawHands(Canvas canvas, Offset center, double radius) {
+  void _drawHands(Canvas canvas, Offset center) {
     final totalSeconds = time.inSeconds;
     final sec = totalSeconds % 60;
     final min = (totalSeconds ~/ 60) % 60;
@@ -120,33 +138,13 @@ class _ClockPainter extends CustomPainter {
     final degMin = min * 6.0;
     final degSec = sec * 6.0;
 
-    // 時針
-    _drawHand(
-      canvas,
-      center,
-      degHour,
-      radius * 0.5,
-      radius * 0.02,
-      Colors.black,
-    );
-    // 分針
-    _drawHand(
-      canvas,
-      center,
-      degMin,
-      radius * 0.7,
-      radius * 0.012,
-      Colors.black,
-    );
-    // 秒針
-    _drawHand(
-      canvas,
-      center,
-      degSec,
-      radius * 0.8,
-      radius * 0.005,
-      Colors.red,
-    );
+    _drawHand(canvas, center, degHour, 46, 5.5, colors.clockHand);
+    _drawHand(canvas, center, degMin, 66, 3.6, colors.clockHand);
+    _drawHand(canvas, center, degSec, 73, 1.6, colors.clockSecondHand);
+
+    // 中心キャップ（秒針色の小円 + 文字盤色の極小円）。
+    canvas.drawCircle(center, 5, Paint()..color = colors.clockSecondHand);
+    canvas.drawCircle(center, 2, Paint()..color = colors.clockFace);
   }
 
   void _drawHand(
@@ -158,7 +156,12 @@ class _ClockPainter extends CustomPainter {
     Color color,
   ) {
     final angle = degrees * math.pi / 180;
-    final end = Offset(
+    // デザインに合わせ、中心の反対側へ少し（長さの16%）伸ばす。
+    final tail = Offset(
+      center.dx - length * 0.16 * math.sin(angle),
+      center.dy + length * 0.16 * math.cos(angle),
+    );
+    final tip = Offset(
       center.dx + length * math.sin(angle),
       center.dy - length * math.cos(angle),
     );
@@ -166,10 +169,10 @@ class _ClockPainter extends CustomPainter {
       ..color = color
       ..strokeWidth = width
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(center, end, paint);
+    canvas.drawLine(tail, tip, paint);
   }
 
   @override
   bool shouldRepaint(covariant _ClockPainter oldDelegate) =>
-      oldDelegate.time != time;
+      oldDelegate.time != time || oldDelegate.colors != colors;
 }

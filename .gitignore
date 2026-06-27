@@ -80,3 +80,6 @@ app.*.map.json
 
 # Coverage
 coverage/
+
+# デザインハンドオフ（社内DS素材・入力資料。リポジトリには含めない）
+design_handoff_shikendokei_theme/
