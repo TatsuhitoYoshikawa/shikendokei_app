@@ -38,6 +38,9 @@ class _ClockScreenState extends State<ClockScreen> {
   /// 「試験終了」オーバーレイの表示フラグ。
   bool _examFinished = false;
 
+  /// 選択中のプリセット名（手動で時刻を変更した場合は null）。
+  String? _presetName;
+
   Timer? _timer;
   final AudioPlayer _player = AudioPlayer();
 
@@ -114,6 +117,7 @@ class _ClockScreenState extends State<ClockScreen> {
       setState(() {
         _startTime = result;
         _current = result; // 開始時刻にリセット。
+        _presetName = null; // 手動変更したのでプリセット名を消す。
       });
     }
   }
@@ -126,7 +130,10 @@ class _ClockScreenState extends State<ClockScreen> {
       initial: _endTime,
     );
     if (result != null) {
-      setState(() => _endTime = result);
+      setState(() {
+        _endTime = result;
+        _presetName = null; // 手動変更したのでプリセット名を消す。
+      });
     }
   }
 
@@ -152,6 +159,7 @@ class _ClockScreenState extends State<ClockScreen> {
       _startTime = preset.start;
       _endTime = preset.end;
       _current = preset.start; // 開始時刻にセット。
+      _presetName = preset.name; // 選択したプリセット名を時計上部に表示。
     });
   }
 
@@ -198,6 +206,20 @@ class _ClockScreenState extends State<ClockScreen> {
                   setState(() => _isAnalog = s.first),
             ),
             const SizedBox(height: 24),
+
+            // 選択中のプリセット名（時計の上部）
+            if (_presetName != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  _presetName!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
 
             // 時計表示
             SizedBox(
