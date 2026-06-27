@@ -92,16 +92,36 @@ dart run flutter_launcher_icons
 アプリの表示名は全プラットフォームで **「試験時計」** に設定済みです
 （Android: `AndroidManifest.xml`、iOS: `Info.plist` の `CFBundleDisplayName`、web: `index.html` / `manifest.json`）。
 
+## リリース
+
+リリース対象は **Android** と **Web** です。
+
+- **アプリ ID**：`com.tatsuhitoyoshikawa.shikendokei`（Android `applicationId` / `namespace`）
+- **バージョン**：`pubspec.yaml` の `version`（例 `1.0.0+1`）。`+` 以降が `versionCode`。
+
+### Android の署名
+
+リリース署名は `android/key.properties` から鍵情報を読み込みます（`android/app/build.gradle.kts`）。
+**`key.properties` と鍵ファイル（`*.jks`）は `.gitignore` 済みで、リポジトリには含めません。**
+
+`android/key.properties`（コミット禁止）の例:
+
+```properties
+storePassword=<キーストアのパスワード>
+keyPassword=<鍵のパスワード>
+keyAlias=upload
+storeFile=/絶対パス/to/upload-keystore.jks
+```
+
+> `key.properties` が無い場合は debug 鍵で署名されるため、`flutter run --release` での開発確認は鍵なしでも可能です（ストア配布用の成果物には `key.properties` が必須）。
+
 ### リリースビルド
 
 ```bash
-flutter build apk --release        # Android（APK）
-flutter build appbundle --release  # Android（Play ストア向け AAB）
-flutter build ios --release        # iOS（要 Xcode 署名設定）
-flutter build web --release        # Web
+flutter build appbundle --release  # Android（Play ストア向け AAB）→ build/app/outputs/bundle/release/app-release.aab
+flutter build apk --release        # Android（配布用 APK）→ build/app/outputs/flutter-apk/app-release.apk
+flutter build web --release        # Web → build/web/
 ```
-
-> 配布にあたっては、アプリケーション ID / バンドル ID（現在 `com.example.shikendokei`）の変更と、各ストアの署名設定が別途必要です。
 
 ## 動作確認チェックリスト
 
