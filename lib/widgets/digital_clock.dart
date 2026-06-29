@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_text.dart';
 
 /// 表示時刻を `HH:MM:SS` の大きな等幅表示で描画するデジタル時計。
 class DigitalClock extends StatelessWidget {
@@ -24,11 +25,10 @@ class DigitalClock extends StatelessWidget {
       fit: BoxFit.scaleDown,
       child: Text(
         text,
-        style: TextStyle(
+        style: AppText.numeric(
+          size: 96,
+          weight: FontWeight.bold,
           color: colors.textPrimary,
-          fontSize: 96,
-          fontWeight: FontWeight.bold,
-          fontFeatures: const [FontFeature.tabularFigures()],
           letterSpacing: 2,
         ),
       ),

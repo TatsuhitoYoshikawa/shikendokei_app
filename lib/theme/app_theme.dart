@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
+import 'app_text.dart';
 
 /// アプリのライト/ダーク [ThemeData] 定義。
 ///
@@ -25,12 +27,18 @@ class AppTheme {
       error: c.danger,
     );
 
+    final base = ThemeData(brightness: brightness);
+    // 既定の本文フォントを Zen Kaku Gothic New（ゴシック）にする。
+    final textTheme = GoogleFonts.zenKakuGothicNewTextTheme(base.textTheme)
+        .apply(bodyColor: c.textPrimary, displayColor: c.textPrimary);
+
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: c.screenBg,
       extensions: [c],
+      textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: c.screenBg,
         foregroundColor: c.textPrimary,
@@ -38,10 +46,11 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: TextStyle(
+        // 見出しは明朝（Shippori Mincho）。
+        titleTextStyle: AppText.serif(
+          size: 17,
+          weight: FontWeight.w600,
           color: c.textPrimary,
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
         ),
       ),
       dialogTheme: DialogThemeData(
@@ -51,10 +60,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: c.dialogBorder),
         ),
-        titleTextStyle: TextStyle(
+        titleTextStyle: AppText.serif(
+          size: 16,
+          weight: FontWeight.w600,
           color: c.textPrimary,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(

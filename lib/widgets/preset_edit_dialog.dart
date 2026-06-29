@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/exam_preset.dart';
+import '../theme/app_text.dart';
 import 'time_setting_dialog.dart';
 
 /// プリセットを新規作成・編集するダイアログ。
@@ -86,7 +87,7 @@ class _PresetEditDialogState extends State<PresetEditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.initial == null ? 'プリセットを追加' : 'プリセットを編集'),
+      title: Text(widget.initial == null ? '試験種類を追加' : '試験種類を編集'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -130,10 +131,9 @@ class _PresetEditDialogState extends State<PresetEditDialog> {
             const Spacer(),
             Text(
               value,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                fontFeatures: [FontFeature.tabularFigures()],
+              style: AppText.numeric(
+                size: 18,
+                weight: FontWeight.bold,
               ),
             ),
             const SizedBox(width: 8),

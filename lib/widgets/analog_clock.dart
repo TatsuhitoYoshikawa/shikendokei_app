@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_text.dart';
 
 /// 表示時刻（時/分/秒）を受け取り、文字盤・目盛り・3本の針を描画するアナログ時計。
 ///
@@ -114,11 +115,10 @@ class _ClockPainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: label,
-          style: TextStyle(
+          style: AppText.numeric(
+            size: 16,
+            weight: FontWeight.w700,
             color: colors.clockNumber,
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
         textAlign: TextAlign.center,

@@ -1,7 +1,7 @@
 name: shikendokei
 description: "試験時計 - 設定した開始時刻から時を刻む試験シミュレーション時計アプリ"
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   audioplayers: ^6.1.0
   shared_preferences: ^2.3.0
+  # 日本語フォント（見出し=Shippori Mincho / UI=Zen Kaku Gothic New / 数字=Roboto）
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:

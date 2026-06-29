@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/exam_preset.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_text.dart';
 import 'preset_edit_dialog.dart';
 
 /// プリセットの一覧を表示し、選択・追加・編集・削除を行うボトムシート。
@@ -14,11 +15,15 @@ class PresetManagerSheet extends StatefulWidget {
     super.key,
     required this.presets,
     required this.onChanged,
+    required this.onDeselect,
     this.selectedName,
   });
 
   final List<ExamPreset> presets;
   final ValueChanged<List<ExamPreset>> onChanged;
+
+  /// 「選択しない」を選んだとき（プリセット未選択に戻す）に呼ばれる。
+  final VoidCallback onDeselect;
 
   /// 現在選択中のプリセット名（チェック表示に使用）。
   final String? selectedName;
@@ -28,6 +33,7 @@ class PresetManagerSheet extends StatefulWidget {
     BuildContext context, {
     required List<ExamPreset> presets,
     required ValueChanged<List<ExamPreset>> onChanged,
+    required VoidCallback onDeselect,
     String? selectedName,
   }) {
     return showModalBottomSheet<ExamPreset>(
@@ -37,6 +43,7 @@ class PresetManagerSheet extends StatefulWidget {
       builder: (_) => PresetManagerSheet(
         presets: presets,
         onChanged: onChanged,
+        onDeselect: onDeselect,
         selectedName: selectedName,
       ),
     );
@@ -121,27 +128,29 @@ class _PresetManagerSheetState extends State<PresetManagerSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'プリセット',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
+                    '試験種類',
+                    style: AppText.serif(
+                      size: 17,
+                      weight: FontWeight.w600,
                       color: colors.textPrimary,
                     ),
                   ),
                   IconButton(
                     onPressed: _add,
                     icon: Icon(Icons.add, color: colors.primary, size: 24),
-                    tooltip: 'プリセットを追加',
+                    tooltip: '試験種類を追加',
                     visualDensity: VisualDensity.compact,
                   ),
                 ],
               ),
               const SizedBox(height: 2),
+              // 「選択しない」行（プリセット未選択に戻す）。未選択中はチェックを表示。
+              _deselectRow(colors),
               if (_presets.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 32),
                   child: Text(
-                    'プリセットがありません。\n「新しいプリセットを追加」から作成してください。',
+                    '試験種類がありません。\n「新しい試験種類を追加」から作成してください。',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: colors.textSub, fontSize: 13),
                   ),
@@ -169,7 +178,7 @@ class _PresetManagerSheetState extends State<PresetManagerSheet> {
                       Icon(Icons.add, color: colors.primary, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        '新しいプリセットを追加',
+                        '新しい試験種類を追加',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -182,6 +191,39 @@ class _PresetManagerSheetState extends State<PresetManagerSheet> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// 「選択しない」行。タップでプリセット未選択に戻してシートを閉じる。
+  Widget _deselectRow(AppColors colors) {
+    final isSelected = widget.selectedName == null;
+    return InkWell(
+      onTap: () {
+        widget.onDeselect();
+        Navigator.of(context).pop();
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: colors.hairline)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '選択しない',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textSub,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle, color: colors.primary, size: 22),
+          ],
         ),
       ),
     );
@@ -214,22 +256,24 @@ class _PresetManagerSheetState extends State<PresetManagerSheet> {
                   const SizedBox(height: 3),
                   Text(
                     _range(p),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                    style: AppText.numeric(
+                      size: 12,
+                      weight: FontWeight.w500,
                       color: colors.textSub,
                       letterSpacing: 0.04 * 12,
-                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            if (isSelected)
-              Icon(Icons.check_circle, color: colors.primary, size: 22)
-            else
-              _rowMenu(colors, index),
+            // 選択中はチェックマークを表示。三点リーダ（編集・削除メニュー）は
+            // 選択中かどうかに関わらず常に表示する。
+            if (isSelected) ...[
+              Icon(Icons.check_circle, color: colors.primary, size: 22),
+              const SizedBox(width: 4),
+            ],
+            _rowMenu(colors, index),
           ],
         ),
       ),

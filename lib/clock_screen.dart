@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'models/exam_preset.dart';
 import 'preset_store.dart';
 import 'theme/app_colors.dart';
+import 'theme/app_text.dart';
 import 'theme/theme_controller.dart';
 import 'widgets/analog_clock.dart';
 import 'widgets/digital_clock.dart';
@@ -150,8 +151,17 @@ class _ClockScreenState extends State<ClockScreen> {
       context,
       presets: _presets,
       selectedName: _presetName,
+      onDeselect: () => setState(() => _presetName = null),
       onChanged: (updated) {
-        setState(() => _presets = updated);
+        setState(() {
+          _presets = updated;
+          // 選択中のプリセットが削除（または改名）されて一覧から無くなったら、
+          // 未選択状態に戻す（時計上は「試験種類を選択」表示になる）。
+          if (_presetName != null &&
+              !updated.any((p) => p.name == _presetName)) {
+            _presetName = null;
+          }
+        });
         PresetStore.save(updated);
       },
     );
@@ -251,15 +261,29 @@ class _ClockScreenState extends State<ClockScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // 経過時間キャプション。
-                      Text(
-                        '経過 ${_hms(_elapsed)}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: colors.textMuted,
-                          letterSpacing: 0.08 * 13,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                      // 経過時間キャプション（ラベルはゴシック・数字は Roboto）。
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '経過 ',
+                              style: AppText.ui(
+                                size: 13,
+                                weight: FontWeight.w500,
+                                color: colors.textMuted,
+                                letterSpacing: 0.08 * 13,
+                              ),
+                            ),
+                            TextSpan(
+                              text: _hms(_elapsed),
+                              style: AppText.numeric(
+                                size: 13,
+                                weight: FontWeight.w500,
+                                color: colors.textMuted,
+                                letterSpacing: 0.08 * 13,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
@@ -342,7 +366,7 @@ class _ClockScreenState extends State<ClockScreen> {
           children: [
             Flexible(
               child: Text(
-                hasPreset ? _presetName! : 'プリセットを選択',
+                hasPreset ? _presetName! : '試験種類を選択',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
@@ -437,11 +461,10 @@ class _ClockScreenState extends State<ClockScreen> {
                 children: [
                   Text(
                     value,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                    style: AppText.numeric(
+                      size: 20,
+                      weight: FontWeight.w600,
                       color: colors.textPrimary,
-                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                   Icon(Icons.edit, size: 16, color: colors.textMuted),
@@ -491,10 +514,10 @@ class _ClockScreenState extends State<ClockScreen> {
                     const SizedBox(height: 12),
                     Text(
                       '試験終了',
-                      style: TextStyle(
+                      style: AppText.serif(
+                        size: 42,
+                        weight: FontWeight.w600,
                         color: colors.finishTitle,
-                        fontSize: 42,
-                        fontWeight: FontWeight.w600,
                         letterSpacing: 0.06 * 42,
                       ),
                     ),

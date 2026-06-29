@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_text.dart';
 
 /// 時・分・秒を3列のホイールで設定するダイアログ。
 /// 開始時刻・終了時刻の設定で共用する。
@@ -163,11 +164,10 @@ class _TimeSettingDialogState extends State<TimeSettingDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 3),
         child: Text(
           ':',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+          style: AppText.numeric(
+            size: 16,
+            weight: FontWeight.w600,
             color: colors.wheelNumDim,
-            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       );
@@ -218,25 +218,22 @@ class _TimeSettingDialogState extends State<TimeSettingDialog> {
                 final distance = (index - value).abs();
                 final TextStyle style;
                 if (distance == 0) {
-                  style = TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w700,
+                  style = AppText.numeric(
+                    size: 21,
+                    weight: FontWeight.w700,
                     color: colors.textPrimary,
-                    fontFeatures: const [FontFeature.tabularFigures()],
                   );
                 } else if (distance == 1) {
-                  style = TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
+                  style = AppText.numeric(
+                    size: 18,
+                    weight: FontWeight.w500,
                     color: colors.wheelNumDim,
-                    fontFeatures: const [FontFeature.tabularFigures()],
                   );
                 } else {
-                  style = TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                  style = AppText.numeric(
+                    size: 16,
+                    weight: FontWeight.w500,
                     color: colors.wheelNumFaint,
-                    fontFeatures: const [FontFeature.tabularFigures()],
                   );
                 }
                 return Center(
