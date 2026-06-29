@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/exam_preset.dart';
 import '../theme/app_text.dart';
-import 'time_setting_dialog.dart';
+import 'hour_minute_picker.dart';
 
 /// プリセットを新規作成・編集するダイアログ。
 /// 名称・開始時刻・終了時刻を入力し、確定で [ExamPreset] を返す。
@@ -51,12 +51,11 @@ class _PresetEditDialogState extends State<PresetEditDialog> {
     String two(int n) => n.toString().padLeft(2, '0');
     final h = (d.inSeconds ~/ 3600) % 24;
     final m = (d.inSeconds ~/ 60) % 60;
-    final s = d.inSeconds % 60;
-    return '${two(h)}:${two(m)}:${two(s)}';
+    return '${two(h)}:${two(m)}';
   }
 
   Future<void> _pickStart() async {
-    final result = await TimeSettingDialog.show(
+    final result = await HourMinutePicker.show(
       context,
       title: '開始時刻を設定',
       initial: _start,
@@ -65,7 +64,7 @@ class _PresetEditDialogState extends State<PresetEditDialog> {
   }
 
   Future<void> _pickEnd() async {
-    final result = await TimeSettingDialog.show(
+    final result = await HourMinutePicker.show(
       context,
       title: '終了時刻を設定',
       initial: _end,
