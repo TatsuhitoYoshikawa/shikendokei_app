@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- google_fonts が初回起動時にフォントを取得するために必要。
+         リリースビルドには自動付与されないため main マニフェストに明記する。 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="試験時計"
         android:name="${applicationName}"

@@ -1,7 +1,7 @@
 name: shikendokei
 description: "試験時計 - 設定した開始時刻から時を刻む試験シミュレーション時計アプリ"
 publish_to: 'none'
-version: 1.1.0+2
+version: 1.1.1+3
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
