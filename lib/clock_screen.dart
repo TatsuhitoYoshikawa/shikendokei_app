@@ -10,8 +10,8 @@ import 'theme/app_text.dart';
 import 'theme/theme_controller.dart';
 import 'widgets/analog_clock.dart';
 import 'widgets/digital_clock.dart';
+import 'widgets/hour_minute_picker.dart';
 import 'widgets/preset_manager_sheet.dart';
-import 'widgets/time_setting_dialog.dart';
 
 /// 試験時計のメイン画面（1画面構成）。
 ///
@@ -114,7 +114,7 @@ class _ClockScreenState extends State<ClockScreen> {
 
   Future<void> _editStartTime() async {
     _stop(); // 設定ボタン押下でも時の刻みは止まる。
-    final result = await TimeSettingDialog.show(
+    final result = await HourMinutePicker.show(
       context,
       title: '開始時刻を設定',
       initial: _startTime,
@@ -130,7 +130,7 @@ class _ClockScreenState extends State<ClockScreen> {
 
   Future<void> _editEndTime() async {
     _stop(); // 設定ボタン押下でも時の刻みは止まる。
-    final result = await TimeSettingDialog.show(
+    final result = await HourMinutePicker.show(
       context,
       title: '終了時刻を設定',
       initial: _endTime,
