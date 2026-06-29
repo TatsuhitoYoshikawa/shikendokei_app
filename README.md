@@ -8,9 +8,13 @@
   <img src="docs/screenshots/main.png" width="240" alt="メイン画面（ライト）">
   &nbsp;&nbsp;
   <img src="docs/screenshots/main_dark.png" width="240" alt="メイン画面（ダーク）">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/exam_types.png" width="240" alt="試験種類の設定">
 </p>
 
-**ライト / ダークテーマ**に対応しています。
+<p align="center"><sub>メイン画面（ライト / ダーク）と、試験種類の登録・選択</sub></p>
+
+**ライト / ダークテーマ**に対応し、よく使う開始・終了時刻を「試験種類」として登録できます。
 
 ## ダウンロード / インストール（Android）
 
