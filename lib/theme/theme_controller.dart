@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// アプリ全体のテーマ（ライト/ダーク/OS追従）を保持・永続化するコントローラ。
