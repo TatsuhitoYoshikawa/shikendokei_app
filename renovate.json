@@ -1,12 +1,30 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "timezone": "Asia/Tokyo",
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "rangeStrategy": "bump",
   "automerge": true,
   "automergeType": "pr",
   "platformAutomerge": true,
-  "major": { "automerge": true },
-  "lockFileMaintenance": { "enabled": true, "automerge": true }
+  "major": {
+    "automerge": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true
+  },
+  "packageRules": [
+    {
+      "description": "Dart SDK は Flutter に同梱されるため単独では上げない（Flutter 本体の更新で一緒に上がる）。上げると CI の flutter pub get が失敗する",
+      "matchDatasources": [
+        "dart-version"
+      ],
+      "enabled": false
+    }
+  ]
 }
